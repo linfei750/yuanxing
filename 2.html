@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大学生抢课小程序 - MVP原型</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --secondary: #f97316;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --light-gray: #e2e8f0;
+            --border-radius: 12px;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+        
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background-color: #f1f5f9;
+            color: var(--dark);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .login-container {
+            background: linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 100%);
+        }
+        
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            transform: translateY(0);
+            transition: transform 0.4s ease, opacity 0.4s ease;
+        }
+        
+        .login-card.login-success {
+            transform: translateY(-20px);
+            opacity: 0;
+        }
+        
+        .app-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-template-rows: 60px 1fr 60px;
+            height: 100vh;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s ease;
+        }
+        
+        .app-container.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            z-index: 50;
+            padding: 0 1rem;
+        }
+        
+        .main-content {
+            overflow-y: auto;
+            padding: 1rem;
+        }
+        
+        .footer {
+            background: white;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            z-index: 50;
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+        
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .badge-primary {
+            background: #eef2ff;
+            color: var(--primary);
+        }
+        
+        .badge-warning {
+            background: #fffbeb;
+            color: var(--warning);
+        }
+        
+        .badge-danger {
+            background: #fef2f2;
+            color: var(--danger);
+        }
+        
+        .badge-success {
+            background: #ecfdf5;
+            color: var(--success);
+        }
+        
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            color: var(--gray);
+            cursor: pointer;
+            transition: var(--transition);
+            flex: 1;
+        }
+        
+        .tab-item.active {
+            color: var(--primary);
+        }
+        
+        .tab-item i {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .tab-item span {
+            font-size: 0.75rem;
+        }
+        
+        .countdown {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+        }
+        
+        .countdown-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .countdown-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            min-width: 40px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 0.25rem;
+        }
+        
+        .countdown-label {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            margin-top: 0.25rem;
+        }
+        
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.25rem;
+        }
+        
+        .course-card .course-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--light-gray);
+        }
+        
+        .course-card .course-body {
+            padding: 1.25rem;
+        }
+        
+        .course-card .course-footer {
+            padding: 1rem;
+            background: #f8fafc;
+            border-top: 1px solid var(--light-gray);
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        
+        .progress {
+            height: 100%;
+            background: var(--primary);
+            width: 0;
+            transition: width 0.4s ease;
+        }
+        
+        .timetable {
+            display: grid;
+            grid-template-columns: 80px repeat(7, 1fr);
+            gap: 0.5rem;
+        }
+        
+        .timetable-header {
+            background: #f1f5f9;
+            padding: 0.75rem;
+            text-align: center;
+            font-weight: 600;
+            color: var(--gray);
+        }
+        
+        .timetable-cell {
+            background: white;
+            border-radius: 6px;
+            padding: 0.75rem;
+            min-height: 80px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .timetable-course {
+            background: #eef2ff;
+            border-radius: 6px;
+            padding: 0.5rem;
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+            border-left: 3px solid var(--primary);
+        }
+        
+        .toast {
+            position: fixed;
+            top: 1.2rem;
+            right: 1.2rem;
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            z-index: 1000;
+            transform: translateX(120%);
+            transition: transform 0.4s ease;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast-success {
+            border-left: 4px solid var(--success);
+        }
+        
+        .toast-error {
+            border-left: 4px solid var(--danger);
+        }
+        
+        .toast-info {
+            border-left: 4px solid var(--primary);
+        }
+        
+        .toast-icon {
+            font-size: 1.4rem;
+        }
+        
+        .toast-success .toast-icon {
+            color: var(--success);
+        }
+        
+        .toast-error .toast-icon {
+            color: var(--danger);
+        }
+        
+        .toast-info .toast-icon {
+            color: var(--primary);
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1.8rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: var(--shadow);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal.active .modal-content {
+            transform: translateY(0);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .rate-stars {
+            display: flex;
+            gap: 0.25rem;
+            margin: 0.5rem 0;
+        }
+        
+        .rate-star {
+            color: #ddd;
+            cursor: pointer;
+            font-size: 1.25rem;
+            transition: color 0.2s;
+        }
+        
+        .rate-star.active {
+            color: var(--warning);
+        }
+        
+        .search-box {
+            background: white;
+            border-radius: 24px;
+            padding: 0.6rem 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border: 1px solid var(--light-gray);
+            transition: var(--transition);
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+        
+        .search-box:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        }
+        
+        .search-box input {
+            border: none;
+            outline: none;
+            background: transparent;
+            width: 100%;
+            font-size: 0.95rem;
+        }
+        
+        .filter-bar {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        .filter-bar::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .filter-item {
+            white-space: nowrap;
+            padding: 0.5rem 1rem;
+            background: white;
+            border-radius: 9999px;
+            border: 1px solid var(--light-gray);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .filter-item.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #eef2ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.7rem 1.4rem;
+            background: var(--primary);
+            color: white;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            transition: var(--transition);
+            cursor: pointer;
+            border: none;
+            font-size: 0.95rem;
+            gap: 0.5rem;
+        }
+        
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(79, 70, 229, 0.2);
+        }
+        
+        .btn-success {
+            background: var(--success);
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.2);
+        }
+        
+        .btn-secondary {
+            background: var(--secondary);
+        }
+        
+        .btn-secondary:hover {
+            background: #ea580c;
+            box-shadow: 0 4px 8px rgba(249, 115, 22, 0.2);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 8px rgba(79, 70, 229, 0.2);
+        }
+        
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+        }
+        
+        .course-tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: #f1f5f9;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录页面 -->
+    <div id="login-page" class="flex items-center justify-center h-screen login-container">
+        <div class="login-card w-full max-w-md p-8">
+            <div class="text-center mb-8">
+                <div class="flex justify-center mb-4">
+                    <div class="w-20 h-20 rounded-full bg-indigo-100 flex items-center justify-center">
+                        <i class="fas fa-graduation-cap text-4xl text-indigo-600"></i>
+                    </div>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">大学生抢课系统</h1>
+                <p class="text-gray-600">快速抢课 · 智能推荐 · 课表管理</p>
+            </div>
+            
+            <form id="login-form">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-medium mb-2" for="username">
+                        学号/用户名
+                    </label>
+                    <input 
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition" 
+                        id="username" 
+                        type="text" 
+                        placeholder="请输入学号或用户名"
+                        value="admin">
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-medium mb-2" for="password">
+                        密码
+                    </label>
+                    <input 
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition" 
+                        id="password" 
+                        type="password" 
+                        placeholder="请输入密码"
+                        value="123456">
+                </div>
+                
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center">
+                        <input id="remember" type="checkbox" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        <label for="remember" class="ml-2 block text-sm text-gray-700">
+                            记住我
+                        </label>
+                    </div>
+                    <a href="#" class="text-sm text-indigo-600 hover:underline">忘记密码?</a>
+                </div>
+                
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-lg transition duration-300 flex items-center justify-center shadow-md hover:shadow-lg">
+                    <i class="fas fa-sign-in-alt mr-2"></i> 登录系统
+                </button>
+                
+                <div class="mt-4 text-center">
+                    <p class="text-sm text-gray-600">其他登录方式</p>
+                    <div class="flex justify-center gap-3 mt-2">
+                        <button type="button" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                            <i class="fab fa-weixin text-green-500"></i>
+                        </button>
+                        <button type="button" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                            <i class="fas fa-mobile-alt text-blue-500"></i>
+                        </button>
+                        <button type="button" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                            <i class="fas fa-id-card text-purple-500"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 主应用区 -->
+    <div id="app-container" class="app-container">
+        <!-- 顶部栏 -->
+        <header class="header flex items-center justify-between">
+            <div class="flex items-center">
+                <i class="fas fa-graduation-cap text-indigo-600 text-xl mr-2"></i>
+                <span class="font-bold text-gray-800">抢课助手</span>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <button class="action-btn relative">
+                    <i class="fas fa-bell text-gray-500"></i>
+                    <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">3</span>
+                </button>
+                
+                <div class="avatar">
+                    林
+                </div>
+            </div>
+        </header>
+        
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 首页/课程列表 -->
+            <div class="tab-content active" id="home-tab">
+                <!-- 抢课倒计时 -->
+                <div class="countdown">
+                    <div class="countdown-item">
+                        <div class="countdown-value">03</div>
+                        <div class="countdown-label">天</div>
+                    </div>
+                    <div class="countdown-item">
+                        <div class="countdown-value">12</div>
+                        <div class="countdown-label">时</div>
+                    </div>
+                    <div class="countdown-item">
+                        <div class="countdown-value">45</div>
+                        <div class="countdown-label">分</div>
+                    </div>
+                    <div class="countdown-item">
+                        <div class="countdown-value">28</div>
+                        <div class="countdown-label">秒</div>
+                    </div>
+                    <div class="ml-4 flex items-center">
+                        <span>距离选课开始还有</span>
+                    </div>
+                </div>
+                
+                <!-- 搜索和筛选 -->
+                <div class="search-box">
+                    <i class="fas fa-search text-gray-400"></i>
+                    <input type="text" placeholder="搜索课程名称、教师或课程代码...">
+                </div>
+                
+                <div class="filter-bar">
+                    <div class="filter-item active">全部课程</div>
+                    <div class="filter-item">必修课</div>
+                    <div class="filter-item">选修课</div>
+                    <div class="filter-item">通识课</div>
+                    <div class="filter-item">专业课</div>
+                    <div class="filter-item">体育课</div>
+                    <div class="filter-item">英语课</div>
+                </div>
+                
+                <!-- 推荐课程 -->
+                <h2 class="text-lg font-bold text-gray-800 mb-3">推荐课程</h2>
+                <div class="course-grid">
+                    <!-- 课程卡片1 -->
+                    <div class="card course-card">
+                        <div class="course-header">
+                            <div class="flex justify-between items-start">
+                                <h3 class="text-lg font-bold text-gray-800">人工智能导论</h3>
+                                <div class="badge badge-primary">
+                                    <i class="fas fa-fire mr-1"></i> 热门
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-1">计算机学院 · 专业选修课</p>
+                        </div>
+                        
+                        <div class="course-body">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="text-gray-700">
+                                    <i class="fas fa-user-tie mr-1"></i> 张教授
+                                </div>
+                                <div class="text-gray-700">
+                                    <i class="fas fa-star mr-1 text-yellow-400"></i> 4.8
+                                </div>
+                            </div>
+                            
+                            <div class="text-gray-700 mb-3">
+                                <i class="fas fa-clock mr-1"></i> 周一 3-4节, 周三 5-6节
+                            </div>
+                            
+                            <div class="text-gray-700 mb-3">
+                                <i class="fas fa-map-marker-alt mr-1"></i> 科技楼301
+                            </div>
+                            
+                            <div class="mb-3">
+                                <span class="course-tag">机器学习</span>
+                                <span class="course-tag">深度学习</span>
+                                <span class="course-tag">Python</span>
+                            </div>
+                            
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <div class="text-sm text-gray-600">剩余名额</div>
+                                    <div class="font-bold">15/60</div>
+                                </div>
+                                <div>
+                                    <div class="text-sm text-gray-600">学分</div>
+                                    <div class="font-bold text-center">3.0</div>
+                                </div>
+                            </div>
+                            
+                            <div class="progress-bar mt-2">
+                                <div class="progress" style="width: 75%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="course-footer">
+                            <button class="btn btn-sm w-full">
+                                <i class="fas fa-bolt mr-1"></i> 加入抢课计划
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 课程卡片2 -->
+                    <div class="card course-card">
+                        <div class="course-header">
+                            <div class="flex justify-between items-start">
+                                <h3 class="text-lg font-bold text-gray-800">数据结构与算法</h3>
+                                <div class="badge badge-warning">
+                                    <i class="fas fa-exclamation-circle mr-1"></i> 即将满员
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-1">计算机学院 · 专业必修课</p>
+                        </div>
+                        
+                        <div class="course-body">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="text-gray-700">
+                                    <i class="fas fa-user-tie mr-1"></i> 王教授
+                                </div>
+                                <div class="text-gray-700">
+                                    <i class="fas fa-star mr-1 text-yellow-400"></i> 4.6
+                                </div>
+                            </div>
+                            
+                            <div class="text-gray-700 mb-3">
+                                <i class="fas fa-clock mr-1"></i> 周二 1-2节, 周四 3-4节
+                            </div>
+                            
+                            <div class="text-gray-700 mb-3">
+                                <i class="fas fa-map-marker-alt mr-1"></i> 信息楼205
+                            </div>
+                            
+                            <div class="mb-3">
+                                <span class="course-tag">C++</span>
+                                <span class="course-tag">算法分析</span>
+                                <span class="course-tag">ACM竞赛</span>
+                            </div>
+                            
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <div class="text-sm text-gray-600">剩余名额</div>
+                                    <div class="font-bold">8/50</div>
+                                </div>
+                                <div>
+                                    <div class="text-sm text-gray-600">学分</div>
+                                    <div class="font-bold text-center">4.0</div>
+                                </div>
+                            </div>
+                            
+                            <div class="progress-bar mt-2">
+                                <div class="progress" style="width: 84%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="course-footer">
+                            <button class="btn btn-sm w-full">
+                                <i class="fas fa-bolt mr-1"></i> 加入抢课计划
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 课程卡片3 -->
+                    <div class="card course-card">
+                        <div class="course-header">
+                            <div class="flex justify-between items-start">
+                                <h3 class="text-lg font-bold text-gray-800">摄影艺术与实践</h3>
+                                <div class="badge badge-success">
+                                    <i class="fas fa-heart mr-1"></i> 根据兴趣推荐
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-1">艺术学院 · 通识选修课</p>
+                        </div>
+                        
+                        <div class="course-body">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="text-gray-700">
+                                    <i class="fas fa-user-tie mr-1"></i> 李教授
+                                </div>
+                                <div class="text-gray-700">
+                                    <i class="fas fa-star mr-1 text-yellow-400"></i> 4.9
+                                </div>
+                            </div>
+                            
+                            <div class="text-gray-700 mb-3">
+                                <i class="fas fa-clock mr-1"></i> 周五 7-9节
+                            </div>
+                            
+                            <div class="text-gray-700 mb-3">
+                                <i class="fas fa-map-marker-alt mr-1"></i> 艺术楼101
+                            </div>
+                            
+                            <div class="mb-3">
+                                <span class="course-tag">摄影技巧</span>
+                                <span class="course-tag">艺术鉴赏</span>
+                                <span class="course-tag">实践课</span>
+                            </div>
+                            
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <div class="text-sm text-gray-600">剩余名额</div>
+                                    <div class="font-bold">25/40</div>
+                                </div>
+                                <div>
+                                    <div class="text-sm text-gray-600">学分</div>
+                                    <div class="font-bold text-center">2.0</div>
+                                </div>
+                            </div>
+                            
+                            <div class="progress-bar mt-2">
+                                <div class="progress" style="width: 62.5%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="course-footer">
+                            <button class="btn btn-sm w-full">
+                                <i class="fas fa-bolt mr-1"></i> 加入抢课计划
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <h2 class="text-lg font-bold text-gray-800 mt-6 mb-3">所有课程</h2>
+                <div class="course-grid">
+                    <!-- 课程卡片4 -->
+                    <div class="card course-card">
+                        <div class="course-header">
+                            <div class="flex justify-between items-start">
+                                <h3 class="text-lg font-bold text-gray-800">现代文学鉴赏</h3>
+                                <div class="badge badge-primary">
+                                    <i class="fas fa-fire mr-1"></i> 热门
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-1">文学院 · 通识选修课</p>
+                        </div>
+                        
+                        <div class="course-body">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="text-gray-700">
+                                    <i class="fas fa-user-tie mr-1"></i> 陈教授
+                                </div>
+                                <div class="text-gray-700">
+                                    <i class="fas fa-star mr-1 text-yellow-400"></i> 4.7
+                                </div>
+                            </div>
+                            
+                            <div class="text-gray-700 mb-3">
+                                <i class="fas fa-clock mr-1"></i> 周三 7-8节
+                            </div>
+                            
+                            <div class="text-gray-700 mb-3">
+                                <i class="fas fa-map-marker-alt mr-1"></i> 人文楼208
+                            </div>
+                            
+                            <div class="mb-3">
+                                <span class="course-tag">文学分析</span>
+                                <span class="course-tag">经典作品</span>
+                                <span class="course-tag">写作技巧</span>
+                            </div>
+                            
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <div class="text-sm text-gray-600">剩余名额</div>
+                                    <div class="font-bold">12/45</div>
+                                </div>
+                                <div>
+                                    <div class="text-sm text-gray-600">学分</div>
+                                    <div class="font-bold text-center">2.0</div>
+                                </div>
+                            </div>
+                            
+                            <div class="progress-bar mt-2">
+                                <div class="progress" style="width: 73.3%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="course-footer">
+                            <button class="btn btn-sm w-full">
+                                <i class="fas fa-bolt mr-1"></i> 加入抢课计划
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 课程表页面 -->
+            <div class="tab-content" id="schedule-tab">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-gray-800">我的课程表</h2>
+                    <div class="flex gap-2">
+                        <button class="btn-outline btn-sm">
+                            <i class="fas fa-calendar-alt mr-1"></i> 第10周
+                        </button>
+                        <button class="btn btn-sm">
+                            <i class="fas fa-download mr-1"></i> 导出课表
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="timetable">
+                    <!-- 时间表头部 -->
+                    <div class="timetable-header"></div>
+                    <div class="timetable-header">周一</div>
+                    <div class="timetable-header">周二</div>
+                    <div class="timetable-header">周三</div>
+                    <div class="timetable-header">周四</div>
+                    <div class="timetable-header">周五</div>
+                    <div class="timetable-header">周六</div>
+                    <div class="timetable-header">周日</div>
+                    
+                    <!-- 第一节课 -->
+                    <div class="timetable-header">8:00<br>9:40</div>
+                    <div class="timetable-cell">
+                        <div class="timetable-course">
+                            <div class="font-medium">数据结构与算法</div>
+                            <div class="text-xs">王教授 · 信息楼205</div>
+                        </div>
+                    </div>
+                    <div class="timetable-cell"></div>
+                    <div class="timetable-cell">
+                        <div class="timetable-course">
+                            <div class="font-medium">数据结构与算法</div>
+                            <div class="text-xs">王教授 · 信息楼205</div>
+                        </div>
+                    </div>
+                    <div class="timetable-cell"></div>
+                    <div class="timetable-cell"></div>
+                    <div class="timetable-cell"></div>
+                    <div class="timetable-cell"></div>
+                    
+                    <!-- 第二节课 -->
+                    <div class="timetable-header">10:00<br>11:40</div>
+                    <div class="timetable-cell"></div>
+                    <div class="timetable-cell">
+                        <div class="timetable-course">
+                            <div class="font-medium">人工智能导论</div>
+                            <div class="text-xs">张教授 · 科技楼301</div>
+                        </div>
+                    </div>
+                    <div class="timetable-cell"></div>
+                    <div class="timetable-cell">
+                        <div class="timetable-course">
+                            <div class="font-medium">人工智能导论</div>
+                            <div class="text-xs">张教授 · 科技楼301</div>
+                        </div>
+                    </div>
+                    <div class="timetable-cell"></div>
+                    <div class="timetable-cell"></div>
+                    <div class="timetable-cell"></div>
+                    
+                    <!-- 第三节课 -->
+                    <div class="timetable-header">14:00<br>15:40</div>
+                    <div class="timetable-cell">
+                        <div class="timetable-course">
+                            <div class="font-medium">高等数学</div>
+                            <div class="text-xs">刘教授 · 数学楼101</div>
+                        </div>
+                    </div>
+                    <div class="timetable-cell"></div>
+                    <div class="timetable-cell">
+                        <div class="timetable-course">
+                            <div class="font-medium">高等数学</div>
+                            <div class="text-xs">刘教授 · 数学楼101</div>
+                        </div>
+                    </div>
+                    <div class="timetable-cell"></div>
+                    <div class="timetable-cell"></div>
+                    <div class="timetable-cell"></div>
+                    <div class="timetable-cell"></div>
+                    
+                    <!-- 第四节课 -->
+                    <div class="timetable-header">16:00<br>17:40</div>
+                    <div class="timetable-cell"></div>
+                    <div class="timetable-cell">
+                        <div class="timetable-course">
+                            <div class="font-medium">大学英语</div>
+                            <div class="text-xs">赵教授 · 外语楼305</div>
+                        </div>
+                    </div>
+                    <div class="timetable-cell"></div>
+                    <div class="timetable-cell">
+                        <div class="timetable-course">
+                            <div class="font-medium">大学英语</div>
+                            <div class="text-xs">赵教授 · 外语楼305</div>
+                        </div>
+                    </div>
+                    <div class="timetable-cell"></div>
+                    <div class="timetable-cell"></div>
+                    <div class="timetable-cell"></div>
+                    
+                    <!-- 第五节课 -->
+                    <div class="timetable-header">19:00<br>20:40</div>
+                    <div class="timetable-cell"></div>
+                    <div class="timetable-cell"></div>
+                    <div class="timetable-cell">
+                        <div class="timetable-course">
+                            <div class="font-medium">摄影艺术与实践</div>
+                            <div class="text-xs">李教授 · 艺术楼101</div>
+                        </div>
+                    </div>
+                    <div class="timetable-cell"></div>
+                    <div class="timetable-cell"></div>
+                    <div class="timetable-cell"></div>
+                    <div class="timetable-cell"></div>
+                </div>
+                
+                <div class="mt-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">已选课程</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="card p-4">
+                            <div class="flex justify-between">
+                                <h4 class="font-bold">数据结构与算法</h4>
+                                <span class="text-red-500">4.0学分</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-1">王教授 · 周二1-2节, 周四3-4节</p>
+                            <div class="mt-3">
+                                <button class="btn-outline btn-sm">
+                                    <i class="fas fa-exchange-alt mr-1"></i> 退选课程
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="card p-4">
+                            <div class="flex justify-between">
+                                <h4 class="font-bold">人工智能导论</h4>
+                                <span class="text-red-500">3.0学分</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-1">张教授 · 周一3-4节, 周三5-6节</p>
+                            <div class="mt-3">
+                                <button class="btn-outline btn-sm">
+                                    <i class="fas fa-exchange-alt mr-1"></i> 退选课程
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 个人中心页面 -->
+            <div class="tab-content" id="profile-tab">
+                <div class="card p-5 mb-6">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="avatar w-16 h-16 text-xl">
+                            林
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold">林飞</h2>
+                            <p class="text-gray-600">计算机科学与技术 · 2021级</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 mb-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-indigo-600">42</div>
+                            <div class="text-sm text-gray-600">已修学分</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-indigo-600">85%</div>
+                            <div class="text-sm text-gray-600">抢课成功率</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-indigo-600">12</div>
+                            <div class="text-sm text-gray-600">已选课程</div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-outline w-full">
+                        <i class="fas fa-user-edit mr-1"></i> 编辑个人信息
+                    </button>
+                </div>
+                
+                <div class="card p-5 mb-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">我的抢课计划</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="font-medium">人工智能导论</div>
+                                <div class="text-sm text-gray-600">优先级: 高</div>
+                            </div>
+                            <div class="text-sm text-gray-600">已加入</div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="font-medium">数据结构与算法</div>
+                                <div class="text-sm text-gray-600">优先级: 高</div>
+                            </div>
+                            <div class="text-sm text-gray-600">已加入</div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="font-medium">摄影艺术与实践</div>
+                                <div class="text-sm text-gray-600">优先级: 中</div>
+                            </div>
+                            <div class="text-sm text-gray-600">已加入</div>
+                        </div>
+                        
+                        <button class="btn btn-sm w-full mt-3">
+                            <i class="fas fa-bolt mr-1"></i> 一键抢课
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card p-5">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">系统设置</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <div>
+                                <div class="font-medium">消息通知</div>
+                                <div class="text-sm text-gray-600">选课提醒、系统通知</div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                            </label>
+                        </div>
+                        
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <div>
+                                <div class="font-medium">自动重试</div>
+                                <div class="text-sm text-gray-600">网络异常时自动重试</div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                            </label>
+                        </div>
+                        
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <div>
+                                <div class="font-medium">深色模式</div>
+                                <div class="text-sm text-gray-600">夜间使用更舒适</div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                            </label>
+                        </div>
+                        
+                        <div class="flex justify-between items-center py-2">
+                            <div>
+                                <div class="font-medium">版本信息</div>
+                                <div class="text-sm text-gray-600">V1.0.0 MVP版</div>
+                            </div>
+                            <div class="text-sm text-indigo-600">检查更新</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- 底部导航 -->
+        <footer class="footer">
+            <div class="tab-item active" data-tab="home-tab">
+                <i class="fas fa-home"></i>
+                <span>首页</span>
+            </div>
+            <div class="tab-item" data-tab="schedule-tab">
+                <i class="fas fa-calendar-alt"></i>
+                <span>课表</span>
+            </div>
+            <div class="tab-item" data-tab="profile-tab">
+                <i class="fas fa-user"></i>
+                <span>我的</span>
+            </div>
+        </footer>
+    </div>
+    
+    <!-- 操作提示 -->
+    <div class="toast toast-success">
+        <div class="toast-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div>
+            <p class="font-medium">登录成功</p>
+            <p class="text-sm text-gray-600">欢迎回来，林飞同学！</p>
+        </div>
+    </div>
+
+    <script>
+        // DOM元素
+        const loginPage = document.getElementById('login-page');
+        const loginForm = document.getElementById('login-form');
+        const appContainer = document.getElementById('app-container');
+        const toast = document.querySelector('.toast');
+        const tabItems = document.querySelectorAll('.tab-item');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        // 登录功能
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // 简单验证
+            if(username === 'admin' && password === '123456') {
+                // 显示成功提示
+                toast.classList.add('show');
+                document.querySelector('.login-card').classList.add('login-success');
+                
+                // 3秒后隐藏toast提示
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+                
+                // 2秒后跳转到主界面
+                setTimeout(() => {
+                    loginPage.style.display = 'none';
+                    appContainer.classList.add('active');
+                }, 1500);
+            } else {
+                showToast('用户名或密码错误！请使用 admin/123456', 'error');
+            }
+        });
+        
+        // 显示提示消息
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <div class="toast-icon">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                </div>
+                <div>
+                    <p class="font-medium">${type === 'success' ? '操作成功' : type === 'error' ? '操作失败' : '提示'}</p>
+                    <p class="text-sm text-gray-600">${message}</p>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 3000);
+        }
+        
+        // 底部导航切换
+        tabItems.forEach(item => {
+            item.addEventListener('click', function() {
+                // 更新活动菜单项
+                tabItems.forEach(i => {
+                    i.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // 切换页面内容
+                const tabId = this.getAttribute('data-tab');
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // 加入抢课计划
+        document.querySelectorAll('.course-footer .btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const courseCard = this.closest('.course-card');
+                const courseName = courseCard.querySelector('.course-header h3').textContent;
+                
+                // 更新按钮状态
+                if (this.textContent.includes('加入')) {
+                    this.innerHTML = '<i class="fas fa-check mr-1"></i> 已加入计划';
+                    this.classList.add('btn-success');
+                    showToast(`"${courseName}" 已加入抢课计划`, 'success');
+                } else {
+                    this.innerHTML = '<i class="fas fa-bolt mr-1"></i> 加入抢课计划';
+                    this.classList.remove('btn-success');
+                    showToast(`"${courseName}" 已从抢课计划中移除`, 'info');
+                }
+            });
+        });
+        
+        // 倒计时
+        function updateCountdown() {
+            const days = document.querySelector('.countdown-value:nth-child(1)');
+            const hours = document.querySelector('.countdown-value:nth-child(2)');
+            const minutes = document.querySelector('.countdown-value:nth-child(3)');
+            const seconds = document.querySelector('.countdown-value:nth-child(4)');
+            
+            // 模拟倒计时
+            let sec = parseInt(seconds.textContent);
+            let min = parseInt(minutes.textContent);
+            let hr = parseInt(hours.textContent);
+            let d = parseInt(days.textContent);
+            
+            sec--;
+            
+            if (sec < 0) {
+                sec = 59;
+                min--;
+                
+                if (min < 0) {
+                    min = 59;
+                    hr--;
+                    
+                    if (hr < 0) {
+                        hr = 23;
+                        d--;
+                    }
+                }
+            }
+            
+            seconds.textContent = sec < 10 ? `0${sec}` : sec;
+            minutes.textContent = min < 10 ? `0${min}` : min;
+            hours.textContent = hr < 10 ? `0${hr}` : hr;
+            days.textContent = d < 10 ? `0${d}` : d;
+        }
+        
+        // 每秒更新一次倒计时
+        setInterval(updateCountdown, 1000);
+        
+        // 模拟进度条动画
+        document.querySelectorAll('.progress').forEach(progress => {
+            const width = parseInt(progress.style.width);
+            let current = 0;
+            
+            const interval = setInterval(() => {
+                current += 1;
+                progress.style.width = `${current}%`;
+                
+                if (current >= width) {
+                    clearInterval(interval);
+                }
+            }, 30);
+        });
+    </script>
+</body>
+</html>
